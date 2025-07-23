@@ -1,0 +1,178 @@
+//#include "PinDefinitionsAndMore.h"  //This must be done before the #include <IRremote.hpp>
+#define IR_recv_pin 8
+#include<IRremote.h>
+//int SEND_BUTTON_PIN = APPLICATION PIN
+
+
+IRrecv irrecv(IR_recv_pin);
+decode_results results;
+
+
+
+int in1 = 9;
+int in2 = 6;
+int in3 = 5; 
+int in4 = 3;
+
+int enA = 10;
+//int enB = 11; //motor driver enable pins for motor pairs A and B
+
+int speed=255;
+
+
+unsigned long last_time_pressed=0; //last time a button was pressed was at (time=0 here since at first we didn't press on anything)
+
+const unsigned long debounce_delay=50; //avoiding "bouncing" phenomenon, which is due to the imperfect nature of the switches where if you press it, it will not
+//turn on the switch, but it will turn it on,off,on "similar to bouncing of a ball" (as a transient phase which's typically very fast, about 20ms) before stabilizing. 
+//so to avoid the car reacting to it by starting,stopping,starting hastily due to this "bouncing" , we will make a 50ms delay to ensure we ignore this to have smooth car movement.
+
+const unsigned long short_press_duration=200;
+
+//flags for long presses (cont. movement)
+bool isMovingForward=false;
+bool isMovingBackward=false;
+bool isMovingRight=false;
+bool isMovingLeft=false;
+
+void setup() {
+//pinMode(SEND_BUTTON_PIN, INPUT_PULLUP);
+Serial.begin(9600);
+irrecv.enableIRIn();
+pinMode(in1,OUTPUT);
+pinMode(in2,OUTPUT);
+pinMode(in3,OUTPUT);
+pinMode(in4,OUTPUT);
+pinMode(enA,OUTPUT);
+
+analogWrite(enA, speed);
+//analogWrite(enB, speed); why commented?>>((enB for me is already embeddedly active)) 
+
+Serial.println("Car Ready to go");
+}
+
+void loop() 
+{
+
+  if(irrecv.decode(&results))
+   
+  {
+    unsigned long current_time=millis(); //Take record of the time at which the button is pressed
+    if (current_time - last_time_pressed > debounce_delay ) //if we are safely out of the debounce time interval, start receiving button presses normally
+    {
+      switch (results.value)
+      {
+        case 0xFF18E7: // Up button pressed
+        
+          Forward();
+          isMovingForward=true;
+          break;
+        
+        
+        case 0xFF4AB5: // Down button pressed
+        
+          Backward();
+          isMovingBackward=true;
+          break;
+          
+        
+        case 0xFF5AA5: // Right button pressed
+        
+          Right();
+          isMovingRight=true;
+          break;
+          
+        
+        case 0xFF10EF: // Left button pressed
+        
+          Left();
+          isMovingLeft=true;
+          break;
+        
+        case 0xFF38C7: // Stops
+        
+          Stop();
+          isMovingForward=false;
+          isMovingBackward=false;
+          isMovingRight=false;
+          isMovingLeft=false;
+          break;
+        
+        case 0xFFFFFFFF: //we are repressing same button 
+        
+          if (isMovingForward) Forward();
+          if (isMovingBackward) Backward();
+          if (isMovingRight) Right();
+          if (isMovingLeft) Left();
+          break;
+
+        default:
+        break;
+        
+      }
+      last_time_pressed = current_time;
+      irrecv.resume();
+    }
+  }
+  else 
+  {
+    //if decoder doesn't receive ir signal (if no button pressed)
+if (millis()-last_time_pressed > 300)
+{
+  Stop();
+      isMovingForward = false;
+    isMovingBackward = false;
+    isMovingRight = false;
+    isMovingLeft = false;
+}
+  }
+ 
+
+ }
+void Stop()
+{
+  digitalWrite(in1,LOW);
+  digitalWrite(in2,LOW);
+  digitalWrite(in3,LOW);
+  digitalWrite(in4,LOW);
+
+}
+
+
+void Forward()
+{
+  Serial.println("Moving forward");
+  digitalWrite(in1,HIGH);
+  digitalWrite(in2,LOW);
+  digitalWrite(in3,HIGH);
+  digitalWrite(in4,LOW);
+
+}
+
+
+void Backward()
+{
+  digitalWrite(in1,LOW);
+  digitalWrite(in2,HIGH);
+  digitalWrite(in3,LOW);
+  digitalWrite(in4,HIGH);
+  
+}
+
+
+void Right()
+{
+  digitalWrite(in1,HIGH);
+  digitalWrite(in2,LOW);
+  digitalWrite(in3,LOW);
+  digitalWrite(in4,LOW);
+
+}
+
+
+void Left()
+{
+  digitalWrite(in1,LOW);
+  digitalWrite(in2,LOW);
+  digitalWrite(in3,HIGH);
+  digitalWrite(in4,LOW);
+}
