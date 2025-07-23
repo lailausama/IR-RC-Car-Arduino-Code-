@@ -1,0 +1,32 @@
+int in1 = 9;
+int in2 = 6;
+int in3 = 5; 
+int in4 = 3;
+
+int enA = 10; // connected to Arduino
+// ENB has black plastic cap on it = permanently enabled so no need to define it
+// My cap of motor A enable fell off and i can't find it so i had to use male-female jumper wire for it (IN MY CASE ONLY)
+
+void setup() {
+  // Setup motor direction pins
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+  
+  pinMode(enA, OUTPUT); // Motor A (left/right)
+
+  // Set direction FORWARD for both motors
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+
+  // Run motor A at full speed (motor B is already full speed via black plastic cap
+  analogWrite(enA, 255);
+}
+
+void loop() {
+  // Nothing here — motors just keep running forward
+}

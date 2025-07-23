@@ -1,0 +1,22 @@
+#include<IRremote.h>
+
+const int recv_pin=8;
+IRrecv irrecv(recv_pin);
+decode_results results;
+
+
+void setup() {
+Serial.begin(9600);
+irrecv.enableIRIn();
+
+}
+
+void loop() {
+ if (irrecv.decode(&results))
+ {
+  Serial.print("HEX: 0x");
+  Serial.println(results.value, HEX);
+  irrecv.resume();
+ }
+
+}
